@@ -1,17 +1,45 @@
-from typing import Optional
+from contextlib import asynccontextmanager
+from typing import Optional, Annotated
 
-from fastapi import FastAPI
+import uvicorn
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 
-app = FastAPI()
+from database import create_tables, del_tables
 
 
-class Task(BaseModel):
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await del_tables()
+    print("Данные очищены")
+    await create_tables()
+    print("БД готова к работе")
+    yield
+    print("Выключение")
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+class TaskAdd(BaseModel):
     name: str
-    description: Optional[str] = None
+    desc: str | None  # str | None == Optional[str] = None
 
 
-@app.get("/tasks")
-def get_tasks():
-    task = Task(name="Leetcode", description= "Решить задачу")
-    return {"data": task}
+class Task(TaskAdd):
+    id: int
+
+
+@app.post("/tasks")
+async def add_task(task: Annotated[TaskAdd, Depends()]):
+    return {"ok": True}
+
+
+# @app.get("/tasks")
+# def get_tasks():
+#     task = Task(name="Letcode", description="Решить задачу")
+#     return {"data": task}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, port=8080, host='127.0.0.1')
