@@ -1,7 +1,4 @@
-from contextlib import asynccontextmanager
 from typing import Optional
-
-from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -15,8 +12,8 @@ new_session = async_sessionmaker(engine, expire_on_commit=False)
 
 class Model(DeclarativeBase):
     pass
-class TasksORM(Model):
-    __tablename__ = "tasks"
+class TaskORM(Model):
+    __tablename__ = "задачи"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
@@ -25,6 +22,7 @@ class TasksORM(Model):
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Model.metadata.create_all)
+
 async def del_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Model.metadata.create_all)
